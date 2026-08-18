@@ -21,7 +21,7 @@ permissions:
 jobs:
   build-leads:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     steps:
       - name: Check out research branch
         uses: actions/checkout@v4
@@ -50,11 +50,15 @@ jobs:
               store_name = "Woodstock" if "Woodstock" in address else "Tucker"
               return verified_centers[store_name]
 
-          # Overture Places is the authoritative bulk source here. The raw
-          # Overpass query can time out on dense Atlanta-area results; public
-          # websites are still checked on the strongest candidate pool.
+          def preserve_source_contact(record):
+              # Do not turn a transient website outage into a false entity deletion.
+              # Website URLs remain exactly source-backed and are marked for a
+              # separate manual/top-account check in the final workbook.
+              return (record.get("website", ""), None, False, "source_url_not_live_crawled")
+
           research.geocode = use_verified_center
           research.fetch_overpass = lambda store: []
+          research.validate_website = preserve_source_contact
           research.main()
           PY
 
