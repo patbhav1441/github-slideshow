@@ -37,7 +37,7 @@ jobs:
           pip install "overturemaps==1.0.1" "requests>=2.32" "rapidfuzz>=3.9"
 
       - name: Build, diversify, and audit 500 physical-address leads
-        run: python firehouse_research/run_diverse_scan.py
+        run: python -m firehouse_research.run_diverse_scan
 
       - name: Show validation summary
         if: always()
