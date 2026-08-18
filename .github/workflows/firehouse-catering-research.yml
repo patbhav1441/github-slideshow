@@ -1,0 +1,55 @@
+name: Firehouse Catering Lead Scan
+
+on:
+  push:
+    branches:
+      - firehouse-catering-research-20260818
+    paths:
+      - "firehouse_research/**"
+      - ".github/workflows/firehouse-catering-research.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-leads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "overturemaps==1.0.1" "requests>=2.32" "rapidfuzz>=3.9"
+
+      - name: Build and validate 500 physical-address leads
+        run: python firehouse_research/build_leads.py
+
+      - name: Show validation summary
+        if: always()
+        run: |
+          find output -maxdepth 1 -type f -printf "%f %s bytes\n" 2>/dev/null || true
+          cat output/summary.json 2>/dev/null || true
+
+      - name: Upload validated research package
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firehouse-verified-leads
+          path: |
+            output/verified_leads.csv
+            output/woodstock_leads.csv
+            output/tucker_leads.csv
+            output/top_100.csv
+            output/summary.json
+          if-no-files-found: error
+          retention-days: 7
