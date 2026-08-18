@@ -21,7 +21,7 @@ permissions:
 jobs:
   build-leads:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out research branch
         uses: actions/checkout@v4
@@ -36,31 +36,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install "overturemaps==1.0.1" "requests>=2.32" "rapidfuzz>=3.9"
 
-      - name: Build and validate 500 physical-address leads
-        run: |
-          python - <<'PY'
-          import firehouse_research.build_leads as research
-
-          verified_centers = {
-              "Woodstock": (34.0869120, -84.5286110, "9745 Highway 92 shopping center, Woodstock, GA 30188"),
-              "Tucker": (33.8554913, -84.2098366, "4306 Lawrenceville Highway shopping center, Tucker, GA 30084"),
-          }
-
-          def use_verified_center(address: str):
-              store_name = "Woodstock" if "Woodstock" in address else "Tucker"
-              return verified_centers[store_name]
-
-          def preserve_source_contact(record):
-              # Do not turn a transient website outage into a false entity deletion.
-              # Website URLs remain exactly source-backed and are marked for a
-              # separate manual/top-account check in the final workbook.
-              return (record.get("website", ""), None, False, "source_url_not_live_crawled")
-
-          research.geocode = use_verified_center
-          research.fetch_overpass = lambda store: []
-          research.validate_website = preserve_source_contact
-          research.main()
-          PY
+      - name: Build, diversify, and audit 500 physical-address leads
+        run: python firehouse_research/run_diverse_scan.py
 
       - name: Show validation summary
         if: always()
