@@ -7,6 +7,12 @@ on:
     paths:
       - "firehouse_research/**"
       - ".github/workflows/firehouse-catering-research.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "firehouse_research/**"
+      - ".github/workflows/firehouse-catering-research.yml"
   workflow_dispatch:
 
 permissions:
